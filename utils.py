@@ -29,7 +29,7 @@ def loadJSON(path):
         return json.load(f)
 
 
-def loadModel(model_dir="models/"):
+def loadModel(model_dir="./models/"):
     vocab = loadJSON(model_dir + "vocabulary.json")
     unigram = loadPickle(model_dir + "unigram.pkl")
     bigram = loadPickle(model_dir + "bigram.pkl")
@@ -37,3 +37,22 @@ def loadModel(model_dir="models/"):
     meta = loadJSON(model_dir + "metadata.json")
     vocab_size = meta["vocab_size"]
     return vocab, unigram, bigram, trigram, vocab_size
+
+
+def loadModelCLI(model_dir="./models/"):
+    def load_json(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def load_pickle(path):
+        with open(path, "rb") as f:
+            return pickle.load(f)
+
+    vocab = load_json(f"{model_dir}/vocabulary.json")
+    unigram = load_pickle(f"{model_dir}/unigram.pkl")
+    bigram = load_pickle(f"{model_dir}/bigram.pkl")
+    trigram = load_pickle(f"{model_dir}/trigram.pkl")
+    meta = load_json(f"{model_dir}/metadata.json")
+    vocab_size = meta["vocab_size"]
+
+    return vocab, [unigram, bigram, trigram], vocab_size

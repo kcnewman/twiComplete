@@ -95,3 +95,40 @@ def suggestWordWithBackoff(
             maxProb = prob
 
     return suggestion, maxProb
+
+
+def suggestTopKWithBackoff(
+    previousTokens,
+    unigramCounts,
+    bigramCounts,
+    trigramCounts,
+    vocabulary,
+    vocabSize,
+    alpha=1e-5,
+    topn=3,
+    startWith=None,
+    unknownToken="<unk>",
+    endToken="<e>",
+):
+    previousTokens = ["<s>", "<s>"] + previousTokens
+    context = previousTokens[-2:]
+    suggestions = []
+    for word in vocabulary:
+        if word in (unknownToken, endToken):
+            continue
+        if startWith and not word.startswith(startWith):
+            continue
+
+        prob = getBackOffProb(
+            word=word,
+            previousNGram=context,
+            trigramCounts=trigramCounts,
+            bigramCounts=bigramCounts,
+            unigramCounts=unigramCounts,
+            vocabSize=vocabSize,
+            alpha=alpha,
+        )
+        suggestions.append((word, prob))
+
+    sorted_suggestions = sorted(suggestions, key=lambda x: x[1], reverse=True)
+    return sorted_suggestions[:topn]

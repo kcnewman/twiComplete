@@ -37,9 +37,9 @@ def computePerplexity(
 
 
 if __name__ == "__main__":
-    vocab, unigram, bigram, trigram, vocab_size = loadModel("models/")
+    vocab, unigram, bigram, trigram, vocab_size = loadModel("./models/")
 
-    test_data = loadPickle("data/test_data.pkl")
+    test_data = loadPickle("./data/processed/testTokens.pkl")
 
     test_data = replaceOOV(test_data, vocabulary=set(vocab), unknownTokens="<unk>")
 
