@@ -1,56 +1,56 @@
+#!/usr/bin/env python3
+"""
+Akan N-gram Autocomplete CLI
+Copyright (c) 2025 Kelvin Newman
+Date: July 12, 2025
+License: MIT
+
+A tool for interactively exploring next-word suggestions based on an N-gram language model trained on Akan text.
+
+Features:
+- Word-by-word interactive shell
+- Trigram backoff with smoothing
+- Top-N ranked predictions
+"""
+
 import argparse
-import readline  # For better CLI experience on Unix
+import sys
+import platform
 from utils import loadModelCLI
 from autocomplete import suggestTopKWithBackoff
-from datetime import datetime
+
+# Import readline if on Unix-like OS for better input UX
+if platform.system() != "Windows":
+    try:
+        import readline
+    except ImportError:
+        pass
 
 
-def print_banner():
-    banner = f"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                          🌟 AKAN AUTOCOMPLETE CLI 🌟                         ║
-║                     Intelligent N-gram Language Predictor                    ║
-║                           for the Akan Language                              ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║  © {datetime.now().year} TwiComplete Project. Built with ❤️ for Akan NLP.        ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-"""
-    print(banner)
+# Color output for better user experience
+class bcolors:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
-def tokenize_input(input_str):
-    import re
-
-    return re.findall(r"[a-zA-ZɛɔƐƆŋŊ']+", input_str.lower())
-
-
-def print_suggestions(suggestions):
-    if not suggestions:
-        print("\n┌────────────────────────────────────────────┐")
-        print("│ 😔 No suggestions found.                  │")
-        print("└────────────────────────────────────────────┘")
-        return
-
-    print("\n┌────────────────────────────────────────────┐")
-    print(f"│ 🎯 Top {len(suggestions)} Suggestions")
-    print("├────────────────────────────────────────────┤")
+def display_suggestions(tokens, suggestions):
+    print(f"\n{bcolors.OKGREEN}Top suggestions for: {' '.join(tokens)}{bcolors.ENDC}")
     for i, (word, prob) in enumerate(suggestions, 1):
-        emoji = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else "🏅"
-        print(f"│ {emoji} {i}. {word:<15} (P={prob:.6f})")
-    print("└────────────────────────────────────────────┘")
+        print(f"  {i}. {bcolors.OKBLUE}{word}{bcolors.ENDC} (P={prob:.4f})")
+    print()
 
 
-def run_once(
-    input_str, vocab, ngramCountsList, vocab_size, topn=3, alpha=1e-5, startWith=None
+def suggest_next_word(
+    tokens, vocab, ngramCountsList, vocab_size, topn=3, alpha=1e-5, startWith=None
 ):
-    tokens = tokenize_input(input_str)
-    if not tokens:
-        print("❌ No valid tokens in input.")
-        return
-
-    print(f"🔍 Context: {' → '.join(tokens)}")
-
-    suggestions = suggestTopKWithBackoff(
+    return suggestTopKWithBackoff(
         previousTokens=tokens,
         unigramCounts=ngramCountsList[0],
         bigramCounts=ngramCountsList[1],
@@ -61,72 +61,104 @@ def run_once(
         topn=topn,
         startWith=startWith,
     )
-    print_suggestions(suggestions)
 
 
-def run_interactive(vocab, ngramCountsList, vocab_size, topn, alpha):
-    print_banner()
-    print("📚 Interactive Mode — Start typing! ('exit' to quit)\n")
-    context = []
+def interactive_shell(vocab, ngramCountsList, vocab_size, topn=3, alpha=1e-5):
+    print(f"""{bcolors.BOLD}
+==========================================
+🌍 Akan N-gram Autocomplete CLI (2025)
+Developed by Kelvin Newman
+------------------------------------------
+Type Akan words one at a time to get suggestions.
+Commands:
+  - /new    → Start a new sentence
+  - exit    → Quit the shell
+==========================================
+{bcolors.ENDC}""")
+
+    current_input = []
 
     while True:
         try:
-            word = input("📝 Next word: ").strip().lower()
+            word = input(f"{bcolors.OKCYAN}Next word > {bcolors.ENDC}").strip().lower()
+
             if word in {"exit", "quit"}:
-                print("👋 Goodbye! Thanks for using Akan Autocomplete CLI.")
+                print(
+                    f"{bcolors.WARNING}👋 Exiting autocomplete shell...{bcolors.ENDC}"
+                )
                 break
-            elif not word:
-                print("⚠️  Please enter a word.")
+
+            elif word == "/new":
+                current_input = []
+                print(f"{bcolors.OKBLUE}🆕 Starting a new sentence...{bcolors.ENDC}")
                 continue
 
-            context.append(word)
-            print(f"🔍 Context: {' → '.join(context)}")
+            elif not word:
+                continue
 
-            suggestions = suggestTopKWithBackoff(
-                previousTokens=context,
-                unigramCounts=ngramCountsList[0],
-                bigramCounts=ngramCountsList[1],
-                trigramCounts=ngramCountsList[2],
-                vocabulary=vocab,
-                vocabSize=vocab_size,
-                alpha=alpha,
+            current_input.append(word)
+
+            suggestions = suggest_next_word(
+                tokens=current_input,
+                vocab=vocab,
+                ngramCountsList=ngramCountsList,
+                vocab_size=vocab_size,
                 topn=topn,
+                alpha=alpha,
             )
-            print_suggestions(suggestions)
+
+            if suggestions:
+                display_suggestions(current_input, suggestions)
+            else:
+                print(
+                    f"{bcolors.FAIL}No suggestions found for: {' '.join(current_input)}{bcolors.ENDC}"
+                )
 
         except KeyboardInterrupt:
-            print("\n👋 Interrupted by user. Exiting.")
+            print(f"\n{bcolors.WARNING}👋 Exiting autocomplete shell...{bcolors.ENDC}")
             break
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"{bcolors.FAIL}Error: {e}{bcolors.ENDC}", file=sys.stderr)
+
+
+def run_once(
+    input_str, vocab, ngramCountsList, vocab_size, topn=3, alpha=1e-5, startWith=None
+):
+    tokens = input_str.strip().lower().split()
+    suggestions = suggest_next_word(
+        tokens,
+        vocab,
+        ngramCountsList,
+        vocab_size,
+        topn,
+        alpha,
+        startWith,
+    )
+
+    if suggestions:
+        display_suggestions(tokens, suggestions)
+    else:
+        print(f"{bcolors.FAIL}No suggestions found.{bcolors.ENDC}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="🌟 Akan N-gram Autocomplete CLI",
-        formatter_class=argparse.RawTextHelpFormatter,
+        description="🌍 Akan N-gram Autocomplete CLI (Kelvin Newman, 2025)"
     )
-    parser.add_argument("-i", "--input", type=str, help="📝 Input text (e.g. 'me pɛ')")
-    parser.add_argument("-s", "--start", type=str, help="🎯 Prefix filter (e.g. 'a')")
+    parser.add_argument("-i", "--input", type=str, help="Input text (e.g. 'me pɛ')")
+    parser.add_argument("-s", "--start", type=str, help="Prefix filter (e.g. 'a')")
     parser.add_argument(
-        "-k", "--smoothing", type=float, default=1e-5, help="🧮 Smoothing factor"
+        "-k", "--smoothing", type=float, default=1e-5, help="Smoothing factor"
     )
-    parser.add_argument("--topn", type=int, default=3, help="🏆 Top-N suggestions")
-    parser.add_argument(
-        "--interactive", action="store_true", help="💬 Launch interactive mode"
-    )
+    parser.add_argument("--topn", type=int, default=3, help="Top-N suggestions to show")
+
     args = parser.parse_args()
 
     print("🚀 Loading model...")
     vocab, ngramCountsList, vocab_size = loadModelCLI()
     print(f"✅ Model loaded. Vocabulary size: {vocab_size}")
 
-    if args.interactive:
-        run_interactive(
-            vocab, ngramCountsList, vocab_size, topn=args.topn, alpha=args.smoothing
-        )
-    elif args.input:
-        print_banner()
+    if args.input:
         run_once(
             input_str=args.input,
             vocab=vocab,
@@ -137,8 +169,12 @@ def main():
             startWith=args.start,
         )
     else:
-        print(
-            "ℹ️ No input provided. Use -i to provide input or --interactive to launch interactive mode."
+        interactive_shell(
+            vocab=vocab,
+            ngramCountsList=ngramCountsList,
+            vocab_size=vocab_size,
+            topn=args.topn,
+            alpha=args.smoothing,
         )
 
 
