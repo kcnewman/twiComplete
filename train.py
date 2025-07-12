@@ -1,24 +1,6 @@
-import pickle
-import json
 import os
 from ngram_model import preprocess, countNGrams
-
-
-# -- Load Data -- #
-def loadData(path):
-    with open(path, "rb") as f:
-        return pickle.load(f)
-
-
-# -- Save Utils -- #
-def savePickle(obj, path):
-    with open(path, "wb") as f:
-        pickle.dump(obj, f)
-
-
-def saveJson(obj, path):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
+from utils import loadData, savePickle, saveJson
 
 
 # -- Train and Save -- #
