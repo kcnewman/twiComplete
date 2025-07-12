@@ -15,19 +15,10 @@ Features:
 
 import argparse
 import sys
-import platform
 from utils import loadModelCLI
 from autocomplete import suggestTopKWithBackoff
 
-# Import readline if on Unix-like OS for better input UX
-if platform.system() != "Windows":
-    try:
-        import readline
-    except ImportError:
-        pass
 
-
-# Color output for better user experience
 class bcolors:
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
