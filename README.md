@@ -43,7 +43,7 @@ twiComplete is an autocomplete system specifically designed for the Akan (Twi) l
 
 ### Prerequisites
 
-- Python 3.7+
+- Python 3
 - pip package manager
 
 ### Setup
