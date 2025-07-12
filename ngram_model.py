@@ -1,6 +1,3 @@
-import pickle
-
-
 def nplusFreqWords(tokenizedSentences, countTreshold):
     """
     Creat Vocab list by selecting words that appear N times or more to handle OOV Words
@@ -50,12 +47,8 @@ def preprocess(
     replaceOOV=replaceOOV,
 ):
     vocabulary = nplusFreqWords(trainData, countTreshold=countTreshold)
-    trainDataReplaced = replaceOOV(
-        trainData, unknownToken=unknownToken, vocabulary=vocabulary
-    )
-    testDataReplaced = replaceOOV(
-        trainData, unknownToken=unknownToken, vocabulary=vocabulary
-    )
+    trainDataReplaced = replaceOOV(trainData, vocabulary, unknownToken)
+    testDataReplaced = replaceOOV(testData, vocabulary, unknownToken)
 
     return trainDataReplaced, testDataReplaced, vocabulary
 
@@ -96,3 +89,12 @@ def estimateProbs(
     k=1.0,
 ):
     previousNGram = tuple(previousNGram)
+    vocab = vocab + [endToken, unknownToken]
+    vocabSize = len(vocab)
+    probabilities = {}
+    for word in vocab:
+        probability = estimateProb(
+            word, previousNGram, nGramCounts, nPlus1GramCounts, vocabSize, k=k
+        )
+        probabilities[word] = probability
+    return probabilities

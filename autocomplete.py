@@ -1,0 +1,58 @@
+from ngram_model import estimateProbs
+import string
+
+
+def suggestWord(
+    previousTokens,
+    nGramCounts,
+    nPlus1GramCounts,
+    vocabulary,
+    endToken="<e>",
+    unknownToken="<unk>",
+    k=1.0,
+    startWith=None,
+):
+    n = len(list(nGramCounts.keys())[0])
+    previousTokens = ["<s>"] * (n - 1) + previousTokens
+    previousNGram = previousTokens[-n:]
+    probabilities = estimateProbs(
+        previousNGram,
+        nGramCounts,
+        nPlus1GramCounts,
+        vocabulary,
+        k=k,
+        endToken=endToken,
+        unknownToken=unknownToken,
+    )
+    suggestion = None
+    maxProb = 0
+
+    for word, prob in probabilities.items():
+        if word in ("<unk>", "<e>"):
+            continue
+        if startWith is not None and not word.startswith(startWith):
+            continue
+        if prob > maxProb:
+            suggestion = word
+            maxProb = prob
+
+    return suggestion, maxProb
+
+
+def get_suggestions(previousTokens, nGramCountsList, vocabulary, k=1.0, startWith=None):
+    modelCounts = len(nGramCountsList)
+    suggestions = []
+    for i in range(modelCounts - 1):
+        nGramCounts = nGramCountsList[i]
+        nPlus1GramCounts = nGramCountsList[i + 1]
+
+        suggestion = suggestWord(
+            previousTokens,
+            nGramCounts,
+            nPlus1GramCounts,
+            vocabulary,
+            k=k,
+            startWith=startWith,
+        )
+        suggestions.append(suggestion)
+    return suggestions
