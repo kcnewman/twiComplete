@@ -4,7 +4,7 @@ from utils import loadData, savePickle, saveJson
 
 
 # -- Train and Save -- #
-def train(trainPath, testPath, modelDir="./models/", countThreshold=2):
+def train(trainPath, testPath, modelDir="./models/", countThreshold=1):
     os.makedirs(modelDir, exist_ok=True)
     print("1. Loading data from {}...".format(trainPath))
     train = loadData(trainPath)
