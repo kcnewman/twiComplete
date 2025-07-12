@@ -51,7 +51,7 @@ twiComplete is an autocomplete system specifically designed for the Akan (Twi) l
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone "https://github.com/kcnewman/twiComplete"
    cd twiComplete
    ```
 
