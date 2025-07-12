@@ -206,4 +206,4 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 data/raw/eng_twi_parallel_corpus_4M.parquet
-data/processed/twiSentences.csv
+data/raw/twi_emotions_dataset.parquet
