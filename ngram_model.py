@@ -98,3 +98,46 @@ def estimateProbs(
         )
         probabilities[word] = probability
     return probabilities
+
+
+def getBackOffProb(
+    word,
+    previousNGram,
+    trigramCounts,
+    bigramCounts,
+    unigramCounts,
+    vocabSize,
+    alpha=1e-5,
+):
+    """
+    Estimate P(word | context) using backoff:
+    - Try trigram: P(w | w_{-2}, w_{-1})
+    - If not found, try bigram: P(w | w_{-1})
+    - If not found, use unigram: P(w)
+    - All smoothed using Laplace smoothing or additive smoothing (via alpha)
+    """
+    word = word.lower()
+    previousNGram = list(previousNGram)
+
+    # --- Trigram ---
+    if len(previousNGram) >= 2:
+        trigram = tuple(previousNGram[-2:] + [word])
+        bigram = tuple(previousNGram[-2:])
+        trigram_count = trigramCounts.get(trigram, 0)
+        bigram_count = bigramCounts.get(bigram, 0)
+        if trigram_count > 0 or bigram_count > 0:
+            return (trigram_count + alpha) / (bigram_count + alpha * vocabSize)
+
+    # --- Bigram ---
+    if len(previousNGram) >= 1:
+        bigram = tuple(previousNGram[-1:] + [word])
+        unigram = tuple(previousNGram[-1:])
+        bigram_count = bigramCounts.get(bigram, 0)
+        unigram_count = unigramCounts.get(unigram, 0)
+        if bigram_count > 0 or unigram_count > 0:
+            return (bigram_count + alpha) / (unigram_count + alpha * vocabSize)
+
+    # --- Unigram ---
+    unigram_count = unigramCounts.get((word,), 0)
+    total_tokens = sum(unigramCounts.values())
+    return (unigram_count + alpha) / (total_tokens + alpha * vocabSize)

@@ -1,4 +1,4 @@
-from ngram_model import estimateProbs
+from ngram_model import estimateProbs, getBackOffProb
 
 
 def suggestWord(
@@ -55,3 +55,43 @@ def get_suggestions(previousTokens, nGramCountsList, vocabulary, k=1.0, startWit
         )
         suggestions.append(suggestion)
     return suggestions
+
+
+def suggestWordWithBackoff(
+    previousTokens,
+    nGramCountsList,
+    vocabulary,
+    vocab_size,
+    endToken="<e>",
+    unknownToken="<unk>",
+    alpha=1e-5,
+    startWith=None,
+):
+    n = len(nGramCountsList)
+    previousTokens = ["<s>"] * (n - 1) + previousTokens
+    previousNGram = previousTokens[-(n - 1) :]
+
+    suggestion = None
+    maxProb = 0.0
+
+    for word in vocabulary:
+        if word in (unknownToken, endToken):
+            continue
+        if startWith is not None and not word.startswith(startWith):
+            continue
+
+        prob = getBackOffProb(
+            word,
+            previousNGram,
+            nGramCountsList[2],
+            nGramCountsList[1],
+            nGramCountsList[0],
+            vocab_size,
+            alpha=alpha,
+        )
+
+        if prob > maxProb:
+            suggestion = word
+            maxProb = prob
+
+    return suggestion, maxProb
