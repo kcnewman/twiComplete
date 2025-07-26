@@ -105,35 +105,6 @@ python train.py
 python evaluate.py
 ```
 
-## Project Structure
-
-```
-twiComplete/
-├── main.py
-├── train.py
-├── evaluate.py
-├── ngram_model.py
-├── autocomplete.py
-├── utils.py
-├── dependencies.txt
-├── preprocess.ipynb
-├── init.py
-├── data/
-│   ├── raw/
-│   │   ├── verified_data.csv
-│   │   └── crowdsourced_data.csv
-│   └── processed/
-│       ├── trainTokens.pkl
-│       ├── testTokens.pkl
-│       └── twiSentences.csv
-└── models/
-    ├── unigram.pkl
-    ├── bigram.pkl
-    ├── trigram.pkl
-    ├── vocabulary.json
-    └── metadata.json
-```
-
 ## Data
 
 ### Data Sources
